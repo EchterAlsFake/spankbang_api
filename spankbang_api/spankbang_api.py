@@ -1,22 +1,25 @@
-import re
 import json
 import html
-import logging
 
 from base_api.base import Core, setup_api
-from base_api.modules.download import legacy_download, threaded, default, FFMPEG
+from base_api.modules.download import legacy_download
 from base_api.modules.progress_bars import Callback
 from base_api.modules.quality import Quality
-from modules.consts import *
 from bs4 import BeautifulSoup
 from functools import cached_property
 from pathlib import Path
+
+try:
+    from modules.consts import *
+
+except (ImportError, ModuleNotFoundError):
+    from .modules.consts import *
 
 setup_api(True)
 base_qualities = ["240p", "320p", "480p", "720p", "1080p", "4k"]
 
 
-class Video():
+class Video:
     def __init__(self, url):
         self.html_content = Core().get_content(url, headers=headers, cookies=cookies).decode("utf-8")
         self.soup = BeautifulSoup(self.html_content, "lxml")
@@ -77,7 +80,7 @@ class Video():
     @cached_property
     def tags(self) -> list:
         """Returns the keywords of the video"""
-        return self.json_tags.get("keywords")
+        return str(self.json_tags.get("keywords")).split(",")
 
     @cached_property
     def author(self) -> str:

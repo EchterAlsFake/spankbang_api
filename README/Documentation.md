@@ -4,7 +4,7 @@
 > - Author: Johannes Habel
 > - Copyright (C) 2024
 > - License: LGPLv3
-> - Dependencies: requests, beautifulsoup (bs4), eaf_base_api
+> - Dependencies: requests, beautifulsoup (bs4), eaf_base_api, lxml
 
 ## Table of Contents
 
