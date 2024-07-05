@@ -75,7 +75,7 @@ class Video():
         return self.json_tags.get("embedUrl")
 
     @cached_property
-    def keywords(self) -> list:
+    def tags(self) -> list:
         """Returns the keywords of the video"""
         return self.json_tags.get("keywords")
 
@@ -88,6 +88,11 @@ class Video():
     def rating(self) -> str:
         """Returns the rating of the video"""
         return REGEX_VIDEO_RATING.search(self.html_content).group(1)
+
+    @cached_property
+    def length(self) -> str:
+        """Returns the length in possibly 00:00 format"""
+        return REGEX_VIDEO_LENGTH.search(self.html_content).group(1)
 
     @cached_property
     def m3u8_master(self) -> str:
