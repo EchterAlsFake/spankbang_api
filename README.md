@@ -44,7 +44,7 @@ video_object.description
 # See docs for more...
 
 # Download the video
-video_object.download(quality=Quality.BEST, path="your_output_path + title.mp4")
+video_object.download(quality=Quality.BEST, path="your_output_path")
 
 ```
 
