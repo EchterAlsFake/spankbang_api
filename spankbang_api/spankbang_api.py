@@ -15,12 +15,12 @@ try:
 except (ImportError, ModuleNotFoundError):
     from .modules.consts import *
 
-setup_api(True)
 base_qualities = ["240p", "320p", "480p", "720p", "1080p", "4k"]
 
 
 class Video:
     def __init__(self, url):
+        self.url = url  # Needed for Porn Fetch
         self.html_content = Core().get_content(url, headers=headers, cookies=cookies).decode("utf-8")
         self.soup = BeautifulSoup(self.html_content, "lxml")
         self.extract_script_2()
