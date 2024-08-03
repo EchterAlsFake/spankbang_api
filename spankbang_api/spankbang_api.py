@@ -1,6 +1,7 @@
 import json
 import html
 
+import requests
 from base_api.base import Core, setup_api
 from base_api.modules.download import legacy_download
 from base_api.modules.progress_bars import Callback
@@ -8,6 +9,8 @@ from base_api.modules.quality import Quality
 from bs4 import BeautifulSoup
 from functools import cached_property
 from pathlib import Path
+
+from typing import Literal
 
 try:
     from modules.consts import *
@@ -138,7 +141,7 @@ class Video:
     def download(self, path, quality, downloader="threaded", callback=Callback.text_progress_bar, no_title=False, use_hls=True):
         quality = Core().fix_quality(quality)
         if no_title is False:
-            path = Path(path + Core().strip_title(self.title) + ".mp4")
+            path = Path(str(path) + str(Core().strip_title(self.title) + ".mp4"))
 
         if use_hls:
             Core().download(video=self, quality=quality, path=path, callback=callback, downloader=downloader)
@@ -157,6 +160,38 @@ class Video:
             selected_quality = quality_map[quality]
             download_url = quality_url_map[selected_quality]
             legacy_download(stream=True, url=download_url, path=path, callback=callback)
+
+
+class Search:
+    def __init__(self, query, trending : bool = False, new: bool = False, popular: bool = False, featured: bool = False,
+                 quality: Literal["hd", "fhd", "uhd"] = "",
+                 duration: Literal["10", "20", "40"] = "",
+                 date: Literal["d", "w", "m", "y"] = ""
+                 ):
+        """
+        :param query:
+        :param trending:
+        :param new:
+        :param popular:
+        :param featured:
+        :param quality: hd = 720p, fhd = 1080p, uhd = 4k ->: DEFAULT: All qualities
+        :param duration: 10 = 10 min, 20 = 20 min, 40 = 40+ min ->: DEFAULT: All durations
+        :param date: "d" = day, "w" = week, "m" = month, "y" = year -->: DEFAULT: All dates
+        """
+        if trending:
+            trending = "trending"
+
+        else:
+            ""
+
+        if new:
+            new = "new"
+
+        else:
+
+            self.html_content = Core().get_content(url=f"https://www.spankbang.com/s/{query}/?o={trending}", headers=headers,
+                                               cookies=cookies).decode("utf-8")
+
 
 
 class Client:
