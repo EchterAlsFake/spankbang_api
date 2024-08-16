@@ -30,7 +30,7 @@ Spankbang API is an API for Spankbang. It allows you to fetch information from v
 
 
 ```python
-from spankbang_api.spankbang_api import Client, Quality
+from spankbang_api import Client, Quality
 # Initialize a Client object
 client = Client()
 

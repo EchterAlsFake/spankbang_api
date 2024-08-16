@@ -35,22 +35,21 @@ The ToS of spankbang.com clearly say that using scrapers / bots isn't allowed.
 Import Spankbang API like in the example below:
 
 ```python
-from spankbang_api.spankbang_api import Client, Quality, Video
-from base_api.modules.download import threaded, default, FFMPEG
+from spankbang_api import Client, Quality, Video, threaded, default, FFMPEG
 ```
 
 # Client
 ### Initialize a Client
 
 ```python
-from spankbang_api.spankbang_api import Client
+from spankbang_api import Client
 client = Client()
 ```
 
 ### Get a video object
 
 ```python
-from spankbang_api.spankbang_api import Client
+from spankbang_api import Client
 video = Client().get_video(url="<video_url>")
 ```
 
@@ -79,7 +78,7 @@ aren't reloaded. Instead, they are cached. This makes it very efficient.
 
 
 ```python
-from spankbang_api.spankbang_api import Client, Quality
+from spankbang_api import Client, Quality
 client = Client()
 video = client.get_video("<video_url>")
 quality = Quality.BEST # Best quality as an example

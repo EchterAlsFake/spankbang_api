@@ -3,7 +3,7 @@ import html
 
 import requests
 from base_api.base import Core, setup_api
-from base_api.modules.download import legacy_download
+from base_api.modules.download import legacy_download, threaded, default, FFMPEG
 from base_api.modules.progress_bars import Callback
 from base_api.modules.quality import Quality
 from bs4 import BeautifulSoup
