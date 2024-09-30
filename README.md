@@ -23,7 +23,7 @@ Spankbang API is an API for Spankbang. It allows you to fetch information from v
 
 # Quickstart
 
-### Have a look at the [Documentation](https://github.com/EchterAlsFake/spankbang_api/blob/master/README/Documentation.md) for more details
+### Have a look at the [Documentation](https://github.com/EchterAlsFake/API_Docs/blob/master/Porn_APIs/Spankbang.md) for more details
 
 - Install the library with `pip install spankbang_api`
 - Or from git using `pip install git+https://github.com/EchterAlsFake/spankbang_api`
