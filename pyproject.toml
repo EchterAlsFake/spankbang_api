@@ -55,9 +55,15 @@ Repository = "https://github.com/EchterAlsFake/unofficial-api-for-spankbang"
 "Donate via PayPal" = "https://paypal.me/EchterAlsFake"
 "Donate via Crypto" = "https://nowpayments.io/donation/EchterAlsFake"
 
+[project.scripts]
+spankbang_api = "spankbang_api.api:main"
+
 [tool.setuptools]
 packages = { find = {} }
 
 [tool.uv.build-backend]
 module-name = "spankbang_api"
 module-root = ""
+
+[tool.uv.sources]
+eaf-base-api = { path = "../eaf_base_api", editable = true }
