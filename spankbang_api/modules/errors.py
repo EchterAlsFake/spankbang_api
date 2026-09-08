@@ -1,4 +1,5 @@
 from base_api.modules.errors import (
+    ScraperException,
     VideoUnavailable,
     NotFound,
     NetworkError,
@@ -9,9 +10,9 @@ from base_api.modules.errors import (
 )
 
 
-class VideoIsProcessing(Exception):
-    def __init__(self):
-        self.msg = "The video is still processing on spankbang's servers!"
+class VideoIsProcessing(ScraperException):
+    def __init__(self, msg: str = "The video is still processing on spankbang's servers!"):
+        super().__init__(msg)
 
 
 __all__ = [
@@ -24,4 +25,3 @@ __all__ = [
     "UnknownNetworkError",
     "DownloadFailed",
 ]
-

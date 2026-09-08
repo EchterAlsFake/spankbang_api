@@ -8,6 +8,8 @@ import os.path
 import functools
 import argparse
 
+from base_api.modules.logger import configure_app_logging
+
 from base_api.modules.static_functions import str_to_bool
 
 from typing import ClassVar, Literal, AsyncGenerator
@@ -34,6 +36,7 @@ from base_api import (
     scrape_stream,
 )
 from base_api.modules.errors import (
+    DownloadCancelled,
     BotProtectionDetected,
     HTTPStatusError,
     InvalidProxy,
@@ -86,21 +89,30 @@ async def get_html_content(core: BaseCore, url: str) -> str:
         return await core.fetch_text(url)
 
     except HTTPStatusError as e:
+        logger.exception("Request failed for %s: %s", url, e)
         if e.status_code == 404:
             raise NotFound(f"Server returned 404 for: {url}") from e
-        raise
+        raise NetworkError(f"Request failed for {url}: {e}") from e
 
     except NetworkRequestError as e:
-        raise NetworkError(str(e)) from e
+        logger.exception("Request failed for %s: %s", url, e)
+        raise NetworkError(f"Request failed for {url}: {e}") from e
 
     except InvalidProxy as e:
-        raise ProxyError(str(e)) from e
+        logger.exception("Request failed for %s: %s", url, e)
+        raise ProxyError(f"Request failed for {url}: {e}") from e
 
     except BotProtectionDetected as e:
-        raise BotDetection(str(e)) from e
+        logger.exception("Request failed for %s: %s", url, e)
+        raise BotDetection(f"Request failed for {url}: {e}") from e
 
     except UnknownError as e:
-        raise UnknownNetworkError(str(e)) from e
+        logger.exception("Request failed for %s: %s", url, e)
+        raise UnknownNetworkError(f"Request failed for {url}: {e}") from e
+
+    except Exception:
+        logger.exception("Failed to fetch or decode response for %s", url)
+        raise
 
 
 @dataclass(kw_only=True, slots=True)
@@ -320,43 +332,44 @@ class Video(BaseMedia):
                        configuration_raw: DownloadConfigRAW | None = None,
                        use_hls: bool = True) -> bool | DownloadReport:
 
-        await self.load_fields("title", "m3u8_base_url", "direct_download_urls", "video_qualities")
+        try:
+            await self.load_fields("title", "m3u8_base_url", "direct_download_urls", "video_qualities")
 
-        config_hls = copy.deepcopy(configuration_hls)
-        config_raw = copy.deepcopy(configuration_raw)
-        config_hls.m3u8_base_url = self.m3u8_base_url
+            config_hls = copy.deepcopy(configuration_hls)
+            config_raw = copy.deepcopy(configuration_raw)
+            config_hls.m3u8_base_url = self.m3u8_base_url
 
-        if config_hls and not config_hls.no_title:
-            config_hls.path = os.path.join(config_hls.path, f"{self.title}.mp4")
-        if config_raw and not config_raw.no_title:
-            config_raw.path = os.path.join(config_raw.path, f"{self.title}.mp4")
+            if config_hls and not config_hls.no_title:
+                config_hls.path = os.path.join(config_hls.path, f"{self.title}.mp4")
+            if config_raw and not config_raw.no_title:
+                config_raw.path = os.path.join(config_raw.path, f"{self.title}.mp4")
 
-        if use_hls:
-            try:
+            if use_hls:
                 return await self.core.download(config_hls)
 
-            except ResourceGone:
-                raise VideoUnavailable("Video stream unavailable, this is an issue from spankbang itself!")
+            else:
+                cdn_urls = self.direct_download_urls
+                quals = self.video_qualities
+                quality_url_map = {qual: url for qual, url in zip(quals, cdn_urls)}
 
-            except Exception as e:
-                raise DownloadFailed(str(e))
+                quality_map = {
+                    "best": max(quals, key=lambda x: int(x)),
+                    "half": sorted(quals, key=lambda x: int(x))[len(quals) // 2],
+                    "worst": min(quals, key=lambda x: int(x))
+                }
 
-
-        else:
-            cdn_urls = self.direct_download_urls
-            quals = self.video_qualities
-            quality_url_map = {qual: url for qual, url in zip(quals, cdn_urls)}
-
-            quality_map = {
-                "best": max(quals, key=lambda x: int(x)),
-                "half": sorted(quals, key=lambda x: int(x))[len(quals) // 2],
-                "worst": min(quals, key=lambda x: int(x))
-            }
-
-            selected_quality = quality_map[config_raw.quality]
-            download_url = quality_url_map[selected_quality]
-            await self.core.legacy_download(url=download_url, configuration=config_raw)
-            return True
+                selected_quality = quality_map[config_raw.quality]
+                download_url = quality_url_map[selected_quality]
+                await self.core.legacy_download(url=download_url, configuration=config_raw)
+                return True
+        except DownloadCancelled:
+            raise
+        except ResourceGone as e:
+            logger.exception("Video stream unavailable for %s", self.url)
+            raise VideoUnavailable(f"Video stream unavailable for {self.url}: {e}") from e
+        except Exception as e:
+            logger.exception("Download failed for %s: %s", self.url, e)
+            raise DownloadFailed(f"Download failed for {self.url}: {e}") from e
 
 
 class Client:
@@ -490,10 +503,12 @@ async def run_main(args_list: list[str] | None = None):
             await video.download(configuration_hls=config)
             print(f"Download complete: {title}")
         except Exception as e:
+            logger.exception("CLI failed while processing %s", url)
             print(f"Error downloading {url}: {e}")
 
 
 def main():
+    configure_app_logging(level=logging.INFO)
     try:
         asyncio.run(run_main())
     except KeyboardInterrupt:
